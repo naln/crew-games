@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>手速挑战：1-50</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --danger-color: #e74c3c;
+            --success-color: #2ecc71;
+            --bg-color: #f0f2f5;
+            --text-color: #2c3e50;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none; /* 禁止选中文本 */
+            -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+        }
+
+        /* 通用屏幕样式 */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            z-index: 10;
+            transition: opacity 0.3s;
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+            z-index: -1;
+        }
+
+        /* 开始界面 */
+        #start-screen h1 {
+            font-size: 2.5rem;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #start-screen p {
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+            background-color: #2980b9;
+        }
+
+        /* 游戏界面 */
+        #game-ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 1.2rem;
+            z-index: 5;
+            pointer-events: none; /* 让点击穿透到下层数字 */
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            color: var(--text-color);
+        }
+
+        #target-display {
+            color: var(--primary-color);
+            font-size: 1.4rem;
+        }
+
+        #game-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .number-bubble {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+            touch-action: manipulation;
+        }
+
+        .number-bubble:active {
+            transform: scale(0.9);
+        }
+
+        /* 惩罚动画 */
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            background-color: rgba(231, 76, 60, 0.2) !important;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-4px, 0, 0); }
+            20%, 80% { transform: translate3d(6px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+            40%, 60% { transform: translate3d(8px, 0, 0); }
+        }
+
+        /* 结算界面 */
+        .result-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 85%;
+            max-width: 400px;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        /* 移动端适配调整 */
+        @media (max-width: 600px) {
+            .number-bubble {
+                width: 45px;
+                height: 45px;
+                font-size: 1.1rem;
+            }
+            #start-screen h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 开始界面 -->
+    <div id="start-screen" class="screen">
+        <h1>手速挑战 1-50</h1>
+        <p>在 60 秒内按顺序点击 1 到 50。<br>点错会扣除时间！</p>
+        <button class="btn" onclick="game.start()">开始游戏</button>
+    </div>
+
+    <!-- 游戏界面 -->
+    <div id="game-screen" class="screen hidden" style="background: transparent;">
+        <div id="game-ui">
+            <div class="stat-box">时间：<span id="timer">60.00</span>s</div>
+            <div class="stat-box">目标：<span id="target-display">1</span></div>
+        </div>
+        <div id="game-area"></div>
+    </div>
+
+    <!-- 结算界面 -->
+    <div id="end-screen" class="screen hidden">
+        <div class="result-card">
+            <h2 class="result-title" id="end-title">挑战结束</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-value" id="stat-score">0</span>
+                    <span class="stat-label">最终得分</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="stat-apm">0</span>
+                    <span class="stat-label">APM (手速)</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="stat-accuracy">0%</span>
+                    <span class="stat-label">准确率</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="stat-penalty">0</span>
+                    <span class="stat-label">错误次数</span>
+                </div>
+            </div>
+            <button class="btn" onclick="game.init()">再来一局</button>
+        </div>
+    </div>
+
+    <script>
+        const game = {
+            config: {
+                totalTime: 60,
+                maxNumber: 50,
+                penaltyTime: 2 // 点错扣 2 秒
+            },
+            state: {
+                isPlaying: false,
+                currentNum: 1,
+                timeLeft: 0,
+                timerInterval: null,
+                totalClicks: 0,
+                correctClicks: 0,
+                wrongClicks: 0,
+                startTime: 0
+            },
+            
+            // DOM 元素缓存
+            dom: {
+                startScreen: document.getElementById('start-screen'),
+                gameScreen: document.getElementById('game-screen'),
+                endScreen: document.getElementById('end-screen'),
+                gameArea: document.getElementById('game-area'),
+                timerEl: document.getElementById('timer'),
+                targetEl: document.getElementById('target-display'),
+                // 统计元素
+                statScore: document.getElementById('stat-score'),
+                statApm: document.getElementById('stat-apm'),
+                statAccuracy: document.getElementById('stat-accuracy'),
+                statPenalty: document.getElementById('stat-penalty'),
+                endTitle: document.getElementById('end-title')
+            },
+
+            // 初始化/重置
+            init: function() {
+                this.dom.startScreen.classList.remove('hidden');
+                this.dom.gameScreen.classList.add('hidden');
+                this.dom.endScreen.classList.add('hidden');
+                this.dom.gameArea.innerHTML = '';
+            },
+
+            // 开始游戏
+            start: function() {
+                this.state.isPlaying = true;
+                this.state.currentNum = 1;
+                this.state.timeLeft = this.config.totalTime;
+                this.state.totalClicks = 0;
+                this.state.correctClicks = 0;
+                this.state.wrongClicks = 0;
+                this.state.startTime = Date.now();
+
+                this.dom.startScreen.classList.add('hidden');
+                this.dom.endScreen.classList.add('hidden');
+                this.dom.gameScreen.classList.remove('hidden');
+                
+                this.updateUI();
+                this.generateNumbers();
+                this.startTimer();
+            },
+
+            // 生成数字气泡
+            generateNumbers: function() {
+                const area = this.dom.gameArea;
+                const width = area.clientWidth;
+                const height = area.clientHeight;
+                const bubbleSize = 50; // 对应 CSS 中的宽度
+
+                for (let i = 1; i <= this.config.maxNumber; i++) {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'number-bubble';
+                    bubble.textContent = i;
+                    bubble.dataset.id = i;
+                    
+                    // 随机位置 (留出边距防止溢出)
+                    const maxX = width - bubbleSize - 20;
+                    const maxY = height - bubbleSize - 20;
+                    
+                    const randomX = Math.floor(Math.random() * maxX) + 10;
+                    const randomY = Math.floor(Math.random() * maxY) + 10;
+
+                    bubble.style.left = randomX + 'px';
+                    bubble.style.top = randomY + 'px';
+
+                    // 绑定点击事件 (使用 touchstart 优化移动端响应，同时保留 click 兼容 PC)
+                    const handleInput = (e) => {
+                        e.preventDefault(); // 防止双击缩放等默认行为
+                        this.handleClick(i, bubble);
+                    };
+
+                    bubble.addEventListener('mousedown', handleInput);
+                    bubble.addEventListener('touchstart', handleInput, {passive: false});
+
+                    area.appendChild(bubble);
+                }
+            },
+
+            // 处理点击
+            handleClick: function(clickedNum, element) {
+                if (!this.state.isPlaying) return;
+
+                this.state.totalClicks++;
+
+                if (clickedNum === this.state.currentNum) {
+                    // 正确
+                    this.state.correctClicks++;
+                    this.state.currentNum++;
+                    
+                    // 视觉反馈：移除已点击的
+                    element.style.transform = 'scale(0)';
+                    element.style.opacity = '0';
+                    setTimeout(() => element.remove(), 200);
+
+                    // 检查胜利
+                    if (this.state.currentNum > this.config.maxNumber) {
+                        this.endGame(true);
+                    } else {
+                        this.updateUI();
+                    }
+                } else {
+                    // 错误
+                    this.state.wrongClicks++;
+                    this.triggerPenalty();
+                }
+            },
+
+            // 惩罚机制
+            triggerPenalty: function() {
+                // 扣时间
+                this.state.timeLeft = Math.max(0, this.state.timeLeft - this.config.penaltyTime);
+                this.updateUI();
+
+                // 视觉反馈：屏幕闪红震动
+                document.body.classList.add('shake');
+                setTimeout(() => {
+                    document.body.classList.remove('shake');
+                }, 500);
+            },
+
+            // 计时器
+            startTimer: function() {
+                if (this.state.timerInterval) clearInterval(this.state.timerInterval);
+                
+                this.state.timerInterval = setInterval(() => {
+                    this.state.timeLeft -= 0.01; // 10ms 更新一次
+                    if (this.state.timeLeft <= 0) {
+                        this.state.timeLeft = 0;
+                        this.endGame(false);
+                    }
+                    this.updateUI();
+                }, 10);
+            },
+
+            // 更新界面显示
+            updateUI: function() {
+                this.dom.timerEl.textContent = this.state.timeLeft.toFixed(2);
+                this.dom.targetEl.textContent = this.state.currentNum;
+            },
+
+            // 结束游戏
+            endGame: function(isWin) {
+                this.state.isPlaying = false;
+                clearInterval(this.state.timerInterval);
+
+                // 计算统计数据
+                const timeUsed = this.config.totalTime - this.state.timeLeft;
+                // 如果赢了，时间按实际用的算；如果输了，按 60 秒算（或者按实际存活时间算，这里按实际消耗时间算 APM 更合理）
+                const actualTimeMinutes = timeUsed / 60; 
+                
+                // 防止除以 0
+                const safeTime = actualTimeMinutes === 0 ? 0.01 : actualTimeMinutes;
+
+                const apm = Math.round(this.state.totalClicks / safeTime);
+                const accuracy = this.state.totalClicks === 0 ? 0 : Math.round((this.state.correctClicks / this.state.totalClicks) * 100);
+                
+                // 显示结算
+                this.dom.gameScreen.classList.add('hidden');
+                this.dom.endScreen.classList.remove('hidden');
+
+                this.dom.endTitle.textContent = isWin ? "挑战成功！" : "时间到！";
+                this.dom.endTitle.style.color = isWin ? "var(--success-color)" : "var(--danger-color)";
+                
+                this.dom.statScore.textContent = this.state.correctClicks;
+                this.dom.statApm.textContent = apm;
+                this.dom.statAccuracy.textContent = accuracy + '%';
+                this.dom.statPenalty.textContent = this.state.wrongClicks;
+            }
+        };
+
+        // 初始化
+        game.init();
+
+        // 窗口大小改变时重新生成（可选，防止布局错乱，这里简单处理为不重新生成，依靠百分比或绝对定位自适应）
+        // 为了更好的体验，可以在 resize 时重置游戏，或者不做处理。
+        // 此处不做处理，保持简单。
+    </script>
+</body>
+</html>
