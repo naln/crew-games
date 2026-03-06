@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单文件 HTML 示例</title>
+    
+    <!-- CSS 部分 -->
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 暗黑模式变量 */
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .counter-display {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            color: var(--primary-color);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-inc { background-color: var(--primary-color); color: white; }
+        .btn-dec { background-color: var(--secondary-color); color: white; }
+        .btn-reset { background-color: #dc3545; color: white; margin-top: 10px; width: 100%; }
+
+        .theme-toggle {
+            margin-top: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* 简单的开关样式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(20px); }
+    </style>
+</head>
+<body>
+
+    <!-- HTML 部分 -->
+    <div class="container">
+        <h1>计数器演示</h1>
+        
+        <div class="counter-display" id="display">0</div>
+        
+        <div class="controls">
+            <button class="btn-dec" onclick="updateCounter(-1)">-</button>
+            <button class="btn-inc" onclick="updateCounter(1)">+</button>
+        </div>
+        
+        <button class="btn-reset" onclick="resetCounter()">重置</button>
+
+        <div class="theme-toggle">
+            <span>暗黑模式</span>
+            <label class="switch">
+                <input type="checkbox" id="themeSwitch">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- JavaScript 部分 -->
+    <script>
+        // 状态变量
+        let count = 0;
+        const displayElement = document.getElementById('display');
+        const themeSwitch = document.getElementById('themeSwitch');
+        const bodyElement = document.body;
+
+        // 更新计数器函数
+        function updateCounter(change) {
+            count += change;
+            displayElement.textContent = count;
+            
+            // 简单的动画效果
+            displayElement.style.transform = "scale(1.2)";
+            setTimeout(() => {
+                displayElement.style.transform = "scale(1)";
+            }, 100);
+        }
+
+        // 重置函数
+        function resetCounter() {
+            count = 0;
+            displayElement.textContent = count;
+        }
+
+        // 切换暗黑模式
+        themeSwitch.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                bodyElement.setAttribute('data-theme', 'dark');
+            } else {
+                bodyElement.removeAttribute('data-theme');
+            }
+        });
+
+        // 初始化：检查系统是否偏好暗黑模式
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            themeSwitch.checked = true;
+            bodyElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+</body>
+</html>
