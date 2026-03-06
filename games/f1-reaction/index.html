@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 反应测试 - 发车反应速度挑战</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; overflow: hidden; }
+        #start-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); z-index: 100; }
+        #start-screen h1 { font-size: 2.5em; color: #fff; margin-bottom: 20px; text-shadow: 0 0 20px rgba(255,0,0,0.5); }
+        #start-screen p { color: rgba(255,255,255,0.8); font-size: 1.1em; margin-bottom: 40px; text-align: center; line-height: 1.6; }
+        #start-btn { padding: 20px 60px; font-size: 1.5em; background: linear-gradient(135deg, #e94560 0%, #c8364a 100%); color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 30px rgba(233,69,96,0.4); font-weight: bold; }
+        #game-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+        #light-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; gap: 20px; z-index: 40; }
+        .light { width: 80px; height: 80px; border-radius: 50%; background: #333; border: 4px solid #555; transition: all 0.3s; }
+        .light.red { background: radial-gradient(circle at 30% 30%, #ff6b6b, #e94560); border-color: #ff6b6b; box-shadow: 0 0 30px rgba(233,69,96,0.8); }
+        #click-area { position: fixed; bottom: 0; left: 0; width: 100%; height: 40%; background: rgba(233,69,96,0.1); display: flex; justify-content: center; align-items: center; }
+        #click-prompt { color: rgba(255,255,255,0.6); font-size: 1.2em; text-align: center; }
+        #end-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; flex-direction: column; justify-content: center; align-items: center; }
+        #end-screen h2 { color: white; font-size: 2.5em; margin-bottom: 30px; }
+        .result-card { background: linear-gradient(135deg, #e94560 0%, #c8364a 100%); padding: 30px 50px; border-radius: 20px; text-align: center; margin-bottom: 30px; }
+        .reaction-time { color: white; font-size: 4em; font-weight: bold; }
+        .rating { color: #ffd700; font-size: 1.5em; margin-top: 15px; font-weight: bold; }
+        #restart-btn { padding: 15px 40px; font-size: 1.2em; background: white; color: #e94560; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; }
+        #false-start { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(233,69,96,0.95); padding: 40px 60px; border-radius: 20px; z-index: 300; text-align: center; }
+        #false-start h3 { color: white; font-size: 2em; margin-bottom: 10px; }
+        @media (max-width: 600px) { .light { width: 60px; height: 60px; } #start-screen h1 { font-size: 1.8em; } .reaction-time { font-size: 3em; } }
+    </style>
+</head>
+<body>
+    <div id="start-screen"><h1>🏎️ F1 反应测试</h1><p>5 个红灯亮起后熄灭<br>在灯灭瞬间尽快点击<br>抢跑会被取消资格！</p><button id="start-btn">开始挑战</button></div>
+    <div id="game-screen"><div id="light-container"><div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div><div class="light"></div></div><div id="click-area"><div id="click-prompt">点击任意区域开始</div></div></div>
+    <div id="end-screen"><h2>⏱️ 反应时间</h2><div class="result-card"><div class="reaction-time" id="result-time">-- ms</div><div class="rating" id="result-rating">--</div></div><button id="restart-btn">再来一次</button></div>
+    <div id="false-start"><h3>❌ 抢跑犯规!</h3></div>
+    <script>
+        let state = { phase: "waiting", startTime: 0, pb: null, attempts: 0 };
+        const lights = document.querySelectorAll(".light");
+        function getRating(ms) { if (ms < 200) return "🥇 F1 车手级！"; if (ms < 250) return "🥈 职业电竞级"; if (ms < 300) return "🥉 精英玩家级"; return "🏅 普通用户级"; }
+        function startGame() { state.phase = "ready"; state.attempts++; document.getElementById("start-screen").style.display = "none"; document.getElementById("end-screen").style.display = "none"; document.getElementById("game-screen").style.display = "block"; document.getElementById("click-prompt").textContent = "准备..."; lights.forEach(l => l.style.background = "#333"); setTimeout(startLights, 1000); }
+        function startLights() { if (state.phase !== "ready") return; state.phase = "lights"; document.getElementById("click-prompt").textContent = "注意信号灯！"; let i = 0; const interval = setInterval(() => { if (i < 5) { lights[i].style.background = "radial-gradient(circle at 30% 30%, #ff6b6b, #e94560)"; i++; } else { clearInterval(interval); setTimeout(triggerGo, Math.random()*1500+500); } }, 1000); }
+        function triggerGo() { state.phase = "go"; state.startTime = Date.now(); lights.forEach(l => l.style.background = "#333"); document.getElementById("click-prompt").textContent = "点击！"; document.getElementById("click-prompt").style.color = "#4CAF50"; document.getElementById("click-prompt").style.fontSize = "2em"; }
+        function handleClick() { if (state.phase === "ready" || state.phase === "lights") { state.phase = "waiting"; document.getElementById("false-start").style.display = "block"; setTimeout(() => { document.getElementById("false-start").style.display = "none"; document.getElementById("start-screen").style.display = "flex"; document.getElementById("game-screen").style.display = "none"; }, 2000); } else if (state.phase === "go") { const ms = Date.now() - state.startTime; state.pb = Math.min(state.pb || ms, ms); document.getElementById("game-screen").style.display = "none"; document.getElementById("end-screen").style.display = "flex"; document.getElementById("result-time").textContent = ms + " ms"; document.getElementById("result-rating").textContent = getRating(ms); document.getElementById("click-prompt").textContent = "点击任意区域开始"; document.getElementById("click-prompt").style.color = "rgba(255,255,255,0.6)"; document.getElementById("click-prompt").style.fontSize = "1.2em"; } }
+        document.getElementById("start-btn").onclick = (e) => { e.stopPropagation(); startGame(); };
+        document.getElementById("restart-btn").onclick = (e) => { e.stopPropagation(); startGame(); };
+        document.addEventListener("click", () => { if (state.phase === "ready" || state.phase === "lights" || state.phase === "go") handleClick(); });
+        document.addEventListener("touchstart", (e) => { if (state.phase === "ready" || state.phase === "lights" || state.phase === "go") { e.preventDefault(); handleClick(); } }, { passive: false });
+        document.addEventListener("keydown", (e) => { if (e.code === "Space" && (state.phase === "ready" || state.phase === "lights" || state.phase === "go")) { e.preventDefault(); handleClick(); } });
+    </script>
+</body>
+</html>
